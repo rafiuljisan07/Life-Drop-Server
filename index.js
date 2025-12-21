@@ -26,12 +26,14 @@ async function run() {
 
 
         const database = client.db('Life_Drop_db');
-        const usersCollection = database.collection('users')
+        const usersCollection = database.collection('users');
+        const donationRequestsCollection = database.collection('donation-requests')
 
 
         app.post('/users', async (req, res) => {
             const userInfo = req.body;
-            userInfo.role = 'donner';
+            userInfo.role = 'donor';
+            userInfo.status = 'active'
             userInfo.createdAt = new Date();
             const result = await usersCollection.insertOne(userInfo);
             res.send(result)
@@ -44,9 +46,15 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/', (req, res) => {
-            res.send('server is running')
-        });
+        app.post('/donation-request', async (req, res) => {
+            const requestData = req.body;
+            const result = await donationRequestsCollection.insertOne(requestData);
+            res.send(result)
+        })
+
+        // app.get('/', (req, res) => {
+        //     res.send('server is running')
+        // });
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
