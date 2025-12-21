@@ -8,6 +8,31 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const admin = require("firebase-admin");
+const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf8')
+const serviceAccount = JSON.parse(decoded);
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
+const verifyFBToken = async (req, res, next) => {
+    const token = req.headers.authorization;
+
+    if (!token) return res.status(401).send("Unauthorize Access");
+
+    try {
+        const idToken = token.split(' ')[1]
+        const decoded = await admin.auth().verifyIdToken(idToken)
+        console.log(decoded);
+        req.decoded_email = decoded.email;
+        next()
+
+    }
+    catch (error) {
+        return res.status(401).send("Unauthorize Access");
+    }
+}
+
 
 const uri = `mongodb+srv://${process.env.USER}:${process.env.PASS}@cluster0.hgbitkj.mongodb.net/?appName=Cluster0`;
 
@@ -46,7 +71,7 @@ async function run() {
             res.send(result)
         })
 
-        app.post('/donation-request', async (req, res) => {
+        app.post('/donation-request', verifyFBToken, async (req, res) => {
             const requestData = req.body;
             const result = await donationRequestsCollection.insertOne(requestData);
             res.send(result)
