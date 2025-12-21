@@ -35,6 +35,13 @@ async function run() {
             userInfo.createdAt = new Date();
             const result = await usersCollection.insertOne(userInfo);
             res.send(result)
+        });
+
+        app.get('/users/:email', async (req, res) => {
+            const { email } = req.params;
+            const query = { email: email };
+            const result = await usersCollection.findOne(query);
+            res.send(result)
         })
 
         app.get('/', (req, res) => {
