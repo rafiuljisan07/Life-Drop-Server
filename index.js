@@ -22,12 +22,25 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         await client.connect();
+        // Send a ping to confirm a successful connection
+
+
+        const database = client.db('Life_Drop_db');
+        const usersCollection = database.collection('users')
+
+
+        app.post('/users', async (req, res) => {
+            const userInfo = req.body;
+            userInfo.role = 'donner';
+            userInfo.createdAt = new Date();
+            const result = await usersCollection.insertOne(userInfo);
+            res.send(result)
+        })
 
         app.get('/', (req, res) => {
             res.send('server is running')
         });
 
-        // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
