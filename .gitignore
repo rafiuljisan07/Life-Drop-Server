@@ -1,3 +1,4 @@
 node_modules
 .env
 life-drop-09.json
+.vercel

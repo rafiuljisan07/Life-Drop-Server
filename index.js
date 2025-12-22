@@ -47,13 +47,15 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         await client.connect();
-        // Send a ping to confirm a successful connection
 
 
         const database = client.db('Life_Drop_db');
         const usersCollection = database.collection('users');
         const donationRequestsCollection = database.collection('donation-requests')
 
+        app.get('/', (req, res) => {
+            res.send('Life Drop Server is running')
+        })
 
         app.post('/users', async (req, res) => {
             const userInfo = req.body;
@@ -67,12 +69,24 @@ async function run() {
         app.get('/users', verifyFBToken, async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result)
-        })
+        });
 
         app.get('/users/:email', async (req, res) => {
             const { email } = req.params;
             const query = { email: email };
             const result = await usersCollection.findOne(query);
+            res.send(result)
+        });
+
+        app.patch('/update/user/status', verifyFBToken, async (req, res) => {
+            const { status, email } = req.query;
+            const query = { email: email };
+            const updateStatus = {
+                $set: {
+                    status: status
+                }
+            };
+            const result = await usersCollection.updateOne(query, updateStatus);
             res.send(result)
         })
 
@@ -82,12 +96,8 @@ async function run() {
             res.send(result)
         })
 
-        // app.get('/', (req, res) => {
-        //     res.send('server is running')
-        // });
-
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        // await client.db("admin").command({ ping: 1 });
+        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
 
     }
