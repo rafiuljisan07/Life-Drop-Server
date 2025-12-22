@@ -1,8 +1,11 @@
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
+// const stripe = require('stripe')(process.env.STRIPE_SECRETE_KEY);
+// const crypto = require('crypto');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
+
 
 const app = express();
 app.use(cors());
@@ -23,7 +26,6 @@ const verifyFBToken = async (req, res, next) => {
     try {
         const idToken = token.split(' ')[1]
         const decoded = await admin.auth().verifyIdToken(idToken)
-        console.log(decoded);
         req.decoded_email = decoded.email;
         next()
 
@@ -107,6 +109,26 @@ async function run() {
 
             const totalRequests = await donationRequestsCollection.countDocuments(query);
             res.send({ request: result, totalRequests })
+        });
+
+        app.get('/search-requests', async (req, res) => {
+            const { bloodGroup, district, upazila } = req.query;
+            const query = {};
+
+            if (!query) return;
+            if (bloodGroup) {
+                const fixed = bloodGroup.replace(/ /g, "+").trim();
+                query.bloodGroup = fixed
+            };
+            if (district) query.district = district;
+            if (upazila) query.upazila = upazila;
+
+            const result = await usersCollection.find(query).toArray();
+
+            res.send(result)
+
+            console.log(query);
+
         })
 
         // await client.db("admin").command({ ping: 1 });
