@@ -46,16 +46,13 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        await client.connect();
+        // await client.connect();
 
 
         const database = client.db('Life_Drop_db');
         const usersCollection = database.collection('users');
         const donationRequestsCollection = database.collection('donation-requests')
 
-        app.get('/', (req, res) => {
-            res.send('Life Drop Server is running')
-        })
 
         app.post('/users', async (req, res) => {
             const userInfo = req.body;
@@ -94,6 +91,22 @@ async function run() {
             const requestData = req.body;
             const result = await donationRequestsCollection.insertOne(requestData);
             res.send(result)
+        });
+
+        app.get('/my-donation-requests', verifyFBToken, async (req, res) => {
+            const email = req.decoded_email;
+            const query = { requesterEmail: email };
+            const size = Number(req.query.size);
+            const page = Number(req.query.page)
+
+            const result = await donationRequestsCollection
+                .find(query)
+                .limit(size)
+                .skip(size * page)
+                .toArray();
+
+            const totalRequests = await donationRequestsCollection.countDocuments(query);
+            res.send({ request: result, totalRequests })
         })
 
         // await client.db("admin").command({ ping: 1 });
@@ -105,7 +118,9 @@ async function run() {
 run().catch(console.dir);
 
 
-
+app.get('/', (req, res) => {
+    res.send('Life Drop Server is running')
+})
 
 app.listen(port, () => {
     console.log('server is running on port', port)
