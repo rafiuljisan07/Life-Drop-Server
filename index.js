@@ -89,6 +89,28 @@ async function run() {
             res.send(result)
         })
 
+        app.patch("/users/profile", verifyFBToken, async (req, res) => {
+            const { email } = req.query;
+            const { name, bloodGroup, district, upazila } = req.body;
+
+            const query = { email };
+
+            const updateFields = {};
+            if (name) updateFields.name = name;
+            if (bloodGroup) updateFields.bloodGroup = bloodGroup;
+            if (district) updateFields.district = district;
+            if (upazila) updateFields.upazila = upazila;
+
+            const updateProfile = {
+                $set: updateFields,
+            };
+
+            const result = await usersCollection.updateOne(query, updateProfile);
+
+            res.send(result);
+        });
+
+
         app.post('/donation-request', verifyFBToken, async (req, res) => {
             const requestData = req.body;
             const result = await donationRequestsCollection.insertOne(requestData);
